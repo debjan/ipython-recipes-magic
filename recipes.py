@@ -9,6 +9,9 @@ This magic supplies this functions:
 %fetch line magic
    It pretty-prints recipe by index from lookup results or by id
 
+%place line magic
+   Places recipe by index from lookup results or by id, on input line
+
 %imply line magic
    Imports recipe by index from lookup results or by id, in user namespace
 
@@ -140,6 +143,26 @@ class RecipesMagics(Magics):
                     msg = header('Error:') +\
                         'Recipe %s could not be imported\n' % line
                     self.shell.write(msg + header('Exception:') + '%s\n' % e)
+
+    @line_magic
+    def place(self, line):
+        """Places ActiveState recipe on next input line.
+
+        Usage: %place <idx|id>
+
+        where "idx" is recipe's index number returned from lookup results
+        or "id" is recipe ID
+
+        Returns: Recipe code on input line
+        """
+        if not self.shell.config.KernelApp or \
+            self.shell.config.KernelApp.values()[0] == 'ipython-console':
+            self.shell.write(header('Info:', 6) +
+                             'Feature not supported in terminal')
+        else:
+            recipe_code = self.get_recipe(line, 'code')
+            if recipe_code:
+                self.shell.set_next_input(recipe_code)
 
     @line_magic
     def desc(self, line):
