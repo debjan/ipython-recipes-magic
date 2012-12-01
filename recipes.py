@@ -214,4 +214,7 @@ def load_ipython_extension(ip):
     if not _loaded:
         ip.register_magics(RecipesMagics)
         ip.write(usage())
+        if ip.config.KernelApp and \
+            ip.config.KernelApp.values()[0] != 'ipython-console':
+            ip.write(header('%place', 8) + '<idx|id>\n')
         _loaded = True
