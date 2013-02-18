@@ -69,7 +69,6 @@ class RecipesMagics(Magics):
             except ImportError:  # fallback to SPL parser
                 import xml.etree.ElementTree as ET
                 parser = ET.XMLParser()
-                parser.parser.UseForeignDTD(1)
                 parser.entity['nbsp'] = '&#x00A0;'
                 tree = ET.parse(opener.open(provider), parser=parser)
             except Exception as e:
@@ -92,7 +91,7 @@ class RecipesMagics(Magics):
                 for k, v in _recipesmagics.items():
                     self.shell.write(header(' %s:' % k, 4) + '%s %s\n' %
                                     (v['title'],
-                                     '...' * (len(v['title']) / 49)))
+                                     '...' * (int(len(v['title']) / 49))))
             else:
                 self.shell.write('Sorry, no results.')
 
@@ -109,7 +108,7 @@ class RecipesMagics(Magics):
         """
         recipe_code = self.get_recipe(line, 'code')
         if recipe_code:
-            self.shell.write(self.shell.pycolorize(recipe_code))
+            self.shell.write(self.shell.pycolorize(recipe_code.decode('utf-8')))
 
     @line_magic
     def imply(self, line):
@@ -135,7 +134,7 @@ class RecipesMagics(Magics):
                 import imp
                 recipe = imp.new_module('recipe')
                 try:
-                    exec recipe_code in recipe.__dict__
+                    exec(recipe_code, recipe.__dict__)
                     self.shell.push('recipe')
                     self.shell.write('%s Recipe %s imported as "recipe".' %
                                      (header('Info:', 6), line))
@@ -155,14 +154,9 @@ class RecipesMagics(Magics):
 
         Returns: Recipe code on input line
         """
-        if not self.shell.config.KernelApp or \
-            self.shell.config.KernelApp.values()[0] == 'ipython-console':
-            self.shell.write(header('Info:', 6) +
-                             'Feature not supported in terminal')
-        else:
-            recipe_code = self.get_recipe(line, 'code')
-            if recipe_code:
-                self.shell.set_next_input(recipe_code)
+        recipe_code = self.get_recipe(line, 'code')
+        if recipe_code:
+            self.shell.set_next_input(recipe_code)
 
     @line_magic
     def desc(self, line):
@@ -189,7 +183,11 @@ class RecipesMagics(Magics):
                     i = self.shell.user_ns['_recipesmagics'][n]['id']
                 r = 'http://code.activestate.com/recipes/api/2/recipes/%s/'
                 req = opener.open(r % i)
-                return json.load(req)[k].encode('utf-8')
+                try:
+                    enc = req.headers.getparam('charset')
+                except AttributeError:  # Python 3
+                    enc = req.headers.get_content_charset()
+                return json.loads(req.read().decode(enc))[k].encode('utf-8')
             except Exception as e:
                 msg = header('Error:') +\
                     'Recipe with index or id as %s, not found.\n' % i
@@ -206,15 +204,12 @@ def usage():
     return header('%lookup', 8) + '<search term>\n' +\
         header('%fetch', 8) + '<idx|id>\n' +\
         header('%imply', 8) + '<idx|id>\n' +\
-        header('%desc', 8) + '<idx|id>\n'
-
+        header('%desc', 8) + '<idx|id>\n' +\
+        header('%place', 8) + '<idx|id>\n'
 
 def load_ipython_extension(ip):
     global _loaded
     if not _loaded:
         ip.register_magics(RecipesMagics)
         ip.write(usage())
-        if ip.config.KernelApp and \
-            ip.config.KernelApp.values()[0] != 'ipython-console':
-            ip.write(header('%place', 8) + '<idx|id>\n')
         _loaded = True

@@ -11,6 +11,10 @@ This magic supplies four functions:
 
   It pretty-prints recipe by index from lookup results or by id
 
+ - `%place` line magic
+
+  Places recipe by index from lookup results or by id, on input line
+
  - `%imply` line magic
 
   Imports recipe by index from lookup results or by id, in user namespace
