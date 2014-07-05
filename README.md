@@ -34,4 +34,4 @@ Installation
 Screenshot
 ---------
 
-![screenshot](http://i.imgur.com/9NZ1nNJ.png)
+![screenshot](http://i.imgur.com/sf04pHT.png)
