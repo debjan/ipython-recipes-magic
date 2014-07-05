@@ -6,8 +6,8 @@ This magic supplies this functions:
    It uses current line as arguments for querying ActiveState recipes,
    then returns indexed list with up to 10 recipe names
 
-%fetch line magic
-   It pretty-prints recipe by index from lookup results or by id
+%listing line magic
+   Listing of recipe by index from lookup results or by id
 
 %place line magic
    Places recipe by index from lookup results or by id, on input line
@@ -24,7 +24,7 @@ that holds the data from last query, with json kind of structure:
 _recipesmagics = {idx: {'title': title, 'id': id}}
 """
 #-----------------------------------------------------------------------------
-# Copyright (C) 2012, debjan
+# Copyright (C) 2012-2014, debjan
 #
 # Distributed under the terms of the Modified BSD License.
 #
@@ -41,6 +41,10 @@ except ImportError:  # Python 3
 from IPython.core.magic import Magics, magics_class, line_magic
 
 ns = "{http://www.w3.org/1999/xhtml}"
+html5_doctype = '<!DOCTYPE html>'
+xhtml_doctype = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n'''
+
 opener = build_opener()
 opener.addheaders = [('User-agent', 'Mozilla/5.0')]
 _loaded = False
@@ -64,13 +68,14 @@ class RecipesMagics(Magics):
             provider += 'python+site:code.activestate.com/recipes'
             try:
                 from lxml import etree
-                parser = etree.XMLParser(resolve_entities=0)
+                parser = etree.XMLParser(resolve_entities=False, recover=True)
                 tree = etree.parse(opener.open(provider), parser)
             except ImportError:  # fallback to SPL parser
                 import xml.etree.ElementTree as ET
                 parser = ET.XMLParser()
                 parser.entity['nbsp'] = '&#x00A0;'
-                tree = ET.parse(opener.open(provider), parser=parser)
+                content = self.check_doctype(opener.open(provider))
+                tree = ET.parse(content, parser=parser)
             except Exception as e:
                 self.shell.write(header('Exception:') + '%s\n' % e)
 
@@ -96,10 +101,10 @@ class RecipesMagics(Magics):
                 self.shell.write('Sorry, no results.')
 
     @line_magic
-    def fetch(self, line):
-        """Fetches ActiveState recipe.
+    def listing(self, line):
+        """Listing of ActiveState recipe.
 
-        Usage: %fetch <idx|id>
+        Usage: %listing <idx|id>
 
         where "idx" is recipe's index number returned from lookup results
         or "id" is recipe ID
@@ -114,8 +119,7 @@ class RecipesMagics(Magics):
     def imply(self, line):
         """Imports ActiveState recipe.
 
-        Usage:
-          %imply <idx|id>
+        Usage: %imply <idx|id>
 
         where "idx" is recipe's index number returned from lookup results
         or "id" is recipe id
@@ -195,17 +199,33 @@ class RecipesMagics(Magics):
         else:
             self.shell.write(usage())
 
+    def check_doctype(self, socket_object):
+        try:
+            from cStringIO import StringIO
+        except:
+            from StringIO import StringIO
+
+        io_buffer = StringIO()
+        doctype = socket_object.readline()
+        if doctype[:15] == html5_doctype:
+            doctype = xhtml_doctype + doctype[15:]
+        io_buffer.write(doctype)
+        io_buffer.write(socket_object.read())
+        io_buffer.seek(0)
+        return io_buffer
+
 
 def header(t, x=12):
-    return('\x1b[0;35m%s\x1b[0m' % t + ' ' * (x - len(t)))
+    return('\x1b[1;31m%s\x1b[0m' % t + ' ' * (x - len(t)))
 
 
 def usage():
-    return header('%lookup', 8) + '<search term>\n' +\
-        header('%fetch', 8) + '<idx|id>\n' +\
-        header('%imply', 8) + '<idx|id>\n' +\
-        header('%desc', 8) + '<idx|id>\n' +\
-        header('%place', 8) + '<idx|id>\n'
+    return header('%lookup', 10) + '<search term>\n' +\
+        header('%desc', 10) + '<idx|id>\n' +\
+        header('%listing', 10) + '<idx|id>\n' +\
+        header('%place', 10) + '<idx|id>\n' +\
+        header('%imply', 10) + '<idx|id>\n'
+
 
 def load_ipython_extension(ip):
     global _loaded
