@@ -73,9 +73,9 @@ class RecipesMagics(Magics):
             except ImportError:  # fallback to SPL parser
                 import xml.etree.ElementTree as ET
                 parser = ET.XMLParser()
-                parser.entity['nbsp'] = '&#x00A0;'
-                content = self.check_doctype(opener.open(provider))
-                tree = ET.parse(content, parser=parser)
+                parser.parser.UseForeignDTD(True)
+                parser.entity['nbsp'] = u'\u00A0'
+                tree = ET.parse(opener.open(provider), parser)
             except Exception as e:
                 self.shell.write(header('Exception:') + '%s\n' % e)
 
@@ -198,21 +198,6 @@ class RecipesMagics(Magics):
                 self.shell.write(msg + header('Exception:') + '%s\n' % e)
         else:
             self.shell.write(usage())
-
-    def check_doctype(self, socket_object):
-        try:
-            from cStringIO import StringIO
-        except:
-            from StringIO import StringIO
-
-        io_buffer = StringIO()
-        doctype = socket_object.readline()
-        if doctype[:15] == html5_doctype:
-            doctype = xhtml_doctype + doctype[15:]
-        io_buffer.write(doctype)
-        io_buffer.write(socket_object.read())
-        io_buffer.seek(0)
-        return io_buffer
 
 
 def header(t, x=12):
