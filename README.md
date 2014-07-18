@@ -34,4 +34,4 @@ Installation
 Screenshot
 ---------
 
-<img src="http://i.imgur.com/9NZ1nNJ.png" alt="screenshot" width="734" height="791"> 
+<img src="http://i.imgur.com/9NZ1nNJ.png" alt="screenshot"> 
