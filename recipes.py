@@ -41,9 +41,6 @@ except ImportError:  # Python 3
 from IPython.core.magic import Magics, magics_class, line_magic
 
 ns = "{http://www.w3.org/1999/xhtml}"
-html5_doctype = '<!DOCTYPE html>'
-xhtml_doctype = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">\n'''
 
 opener = build_opener()
 opener.addheaders = [('User-agent', 'Mozilla/5.0')]
@@ -80,7 +77,7 @@ class RecipesMagics(Magics):
                 self.shell.write(header('Exception:') + '%s\n' % e)
 
             base_url = 'http://code.activestate.com/recipes'
-            path = ".//{0}li//{0}h3/{0}a".format(ns)
+            path = ".//{0}li//{0}h2/{0}a".format(ns)
             for el in [et.get('href') for et in tree.findall(path)]:
                 sn = el.split('/')[4].split('-')
                 if sn[0].isdigit():
