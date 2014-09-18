@@ -34,4 +34,4 @@ Installation
 Screenshot
 ---------
 
-<img src="http://i.imgur.com/9NZ1nNJ.png" alt="screenshot"> 
+![](http://i.imgur.com/9NZ1nNJ.png)
